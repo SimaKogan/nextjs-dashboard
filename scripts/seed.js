@@ -5,7 +5,7 @@ const {
   revenue,
   users,
 } = require('../app/lib/placeholder-data.js');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 async function seedUsers(client) {
   try {
@@ -62,6 +62,13 @@ async function seedInvoices(client) {
 `;
 
     console.log(`Created "invoices" table`);
+
+    // Не дублируем счета при повторном запуске seed
+    const existing = await client.sql`SELECT COUNT(*) FROM invoices`;
+    if (Number(existing.rows[0].count) > 0) {
+      console.log('Invoices already seeded, skipping');
+      return { createTable, invoices: [] };
+    }
 
     // Insert data into the "invoices" table
     const insertedInvoices = await Promise.all(
